@@ -74,7 +74,7 @@ def display_sidebar():
 
         def store_api_key():
             global openai_api_key
-            openai_api_key = st.text_input("Enter your OpenAI API key:")
+            openai_api_key = st.text_input("Enter your API key:")
             if not openai_api_key:
                 st.warning("Please enter your OpenAI API key.")
 
