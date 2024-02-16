@@ -12,7 +12,7 @@ def get_pdf_text(pdf_docs):
     return "".join([page.extract_text() for pdf in pdf_docs for page in PdfReader(pdf).pages])
 
 def get_text_chunks(text):
-    return RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=50,length_function=len).split_text(text)
+    return RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=60,length_function=len).split_text(text)
 
 def get_vector_store(text_chunks):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large",api_key=openai_api_key)
@@ -32,14 +32,14 @@ Your answer should be directly informed by and confined to the details present i
 
 Answer:
 """
-    llm = ChatOpenAI(model_name="gpt-4-0125-preview", api_key=openai_api_key, temperature=0.2, max_tokens=1024)
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", api_key=openai_api_key, temperature=0.2, max_tokens=1024)
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
     return load_qa_chain(llm, chain_type="stuff", prompt=prompt)
 
 def user_input(user_question):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
     new_db = FAISS.load_local("faiss_index", embeddings)
-    docs = new_db.similarity_search(user_question, search_kwargs={"k": 15}, return_texts=True )
+    docs = new_db.similarity_search(user_question, search_kwargs={"k": 10}, return_texts=True )
     print(docs)
     chain = get_conversational_chain()
     with get_openai_callback() as cb:
@@ -54,7 +54,7 @@ def setup_page():
 def get_user_question():
     user_question = st.text_input("Ask a Question from the PDF Files", help="Enter your question here and get answers based on the uploaded PDF content.")
     if user_question:
-        st.success("You can now click the 'Submit' button to get an answer.")
+        st.success("Your answer will appear here.")
     else:
         st.warning("Please enter a question.")
     return user_question
@@ -76,9 +76,13 @@ def display_sidebar():
             global openai_api_key
             openai_api_key = st.text_input("Enter your API key:")
             if not openai_api_key:
-                st.warning("Please enter your OpenAI API key.")
+                st.warning("Please enter your API key.")
 
-        store_api_key()
+        try:
+            store_api_key()
+        except Exception as e:
+            st.error(f"An error occurred while storing the API key: {str(e)}")
+
         pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True, help="Upload one or more PDF files from which you want to extract information.")
         if st.button("Submit & Process"):
             process_files(pdf_docs)
