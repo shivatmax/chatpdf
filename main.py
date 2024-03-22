@@ -20,7 +20,7 @@ def get_vector_store(text_chunks):
 
 def get_conversational_chain():
     prompt_template = """
-Please provide a comprehensive and detailed answer to the question, strictly using only the information provided in the context. Avoid introducing any external information or assumptions not directly found in the given context.
+You are an expert in synthesizing information directly from provided contexts. Your task is to analyze the given context meticulously and answer the question based exclusively on this context. Ensure no external information is introduced, and the answer is entirely supported by the context provided.
 
 Context:
 {context}
@@ -28,9 +28,10 @@ Context:
 Question:
 {question}
 
-Your answer should be directly informed by and confined to the details present in the context. 
+Your answer should demonstrate a deep understanding of the context, directly linking your explanation or solution to the information contained within it.
 
 Answer:
+
 """
     llm = ChatOpenAI(model_name="gpt-3.5-turbo-0125", api_key=openai_api_key, temperature=0.2, max_tokens=1024)
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
@@ -38,7 +39,7 @@ Answer:
 
 def user_input(user_question):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
-    new_db = FAISS.load_local("faiss_index", embeddings)
+    new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
     docs = new_db.similarity_search(user_question, search_kwargs={"k": 10}, return_texts=True )
     print(docs)
     chain = get_conversational_chain()
