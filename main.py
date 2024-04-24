@@ -7,6 +7,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.callbacks import get_openai_callback
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
+from conversation_logger import log_conversation
 
 def get_pdf_text(pdf_docs):
     return "".join([page.extract_text() for pdf in pdf_docs for page in PdfReader(pdf).pages])
@@ -46,6 +47,7 @@ def user_input(user_question):
     with get_openai_callback() as cb:
         response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
     print(cb)
+    log_conversation(response["output_text"], user_question, False)
     st.write("Reply:\n", response["output_text"])
 
 def setup_page():
